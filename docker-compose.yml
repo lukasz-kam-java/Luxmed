@@ -1,0 +1,33 @@
+version: "3.8"
+services:
+  postgres_db:
+    image: postgres
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_DB: Luxmed
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+    ports:
+      - 5555:5432
+    networks:
+      - luxmed_docker_network
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      
+  spring-boot-app:
+    image: openjdk:21-jdk-slim
+    container_name: spring-boot-app 
+    volumes:
+      - ./target/luxmed-rest-app.jar:/target/luxmed-rest-app.jar
+    working_dir: /target
+    command: ["java", "-jar", "luxmed-rest-app.jar", "--spring.datasource.url=jdbc:postgresql://postgres_db:5432/Luxmed", "--spring.datasource.password=mysecretpassword"]  
+    ports:
+      - 8888:8080
+    networks:
+      - luxmed_docker_network
+    depends_on:
+      - postgres_db
+      
+networks:
+  luxmed_docker_network:
